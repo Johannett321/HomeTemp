@@ -85,12 +85,6 @@ void prepareDHTTempSensor() {
   dht.begin();
 }
 
-
-
-/*--------LOOP---------*/
-
-
-
 /*
  * LOOP funksjonen:
  * Denne funksjonen kjøres om og om igjen. Mange ganger i millisekundet. 
@@ -101,6 +95,7 @@ void prepareDHTTempSensor() {
  * Den sjekker om HomeTemp er tilkoblet wifi hvert 6. sekund, og kobler til Wifi dersom man ikke er det. 
  * Den sjekker om det er noen nye enheter tilkoblet, og lytter til kommandoer fra de.
  */
+ 
 void loop(){
   //Henter temperatur hvert 10. minutt, og lagrer dette.
   if (millis() % refreshFreq == 1) {
