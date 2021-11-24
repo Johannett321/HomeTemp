@@ -1,10 +1,3 @@
-/*   Arduino IOT - Temperature (oC) and Humidity (%) on the web
-  *Use the DHT-22 sensor to read temperature and humidity values
-  *Send these values to www.thingSpeak.com with the ESP8266 serial Wifi module
-  Dev: Michalis Vasilakis // Date:23/2/2016 // Update: 25/2/2015 // Ver. 1.3
-  More info: http://www.ardumotive.com/iot-wifi-temp-and-humidity.html
-  Tip: open the serial monitor for debugging                    */
-
 //RTC module
 #include "RTClib.h"
 
@@ -38,57 +31,58 @@ char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursd
 float temp;
 int hum;
 String tempC;
-int refreshFreq = 1000*60*10;
-//int refreshFreq = 1000*15;
+int refreshFreq = 1000*60*10; //Dersom den skal oppdateres hvert 10. minutt
+//int refreshFreq = 1000*15; //Dersom den skal oppdateres hvert 15. sekund (brukes til testing)
 
 //SERVER AND CLIENT
 WiFiServer server(80);
 WiFiClient client;
 
 void setup() {
-  Serial.begin(9600); //or use default 115200.
+  Serial.begin(9600); //Dette er bare et notat til Johan: BaudRate_115200.
   while(!Serial) {}
 
+  //Her gjøres de forskjellige modulene klare.
   prepareRTC();
-
   prepareSD();
   prepareDHTTempSensor();
   checkWifi();
 }
 
+//Starter RTC modulen
+void prepareRTC() {
+  //Dersom den ikke finner RTC modulen
+  if (!rtc.begin()) {
+   Serial.println("Couldn't find RTC");
+   while (1);
+  }
+
+  //Dersom RTC modulen ikke kjørte fra før (batteriet er blitt tatt ut), still klokken.
+  if (! rtc.isrunning()) {
+    Serial.println("RTC lost power");
+   
+    // Stiller klokken på RTC modulen til når filen ble kompilert
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }
+}
+
+// Starter SD kort leseren
 void prepareSD() {
-  // SD Card Initialization
   Serial.println("Preparing SD card...");
   pinMode(pinSD, OUTPUT);
   
   if (SD.begin()) {
     Serial.println("SD card is ready to use.");
-    prepareDHTTempSensor();
   }else {
     Serial.println("SD card initialization failed");
     abort();
   }
-  //SD.remove("temps.txt"); //Sletter temperaturfilen
+  //SD.remove("temps.txt"); //Sletter temperaturfilen dersom dette ønskes (brukes til testing)
 }
 
+// Starter temperatursensoren.
 void prepareDHTTempSensor() {
   dht.begin();
-}
-
-void prepareRTC() {
-  if (!rtc.begin()) {
-   Serial.println("Couldn't find RTC");
-   while (1);
- }
-
- if (! rtc.isrunning()) {
-   Serial.println("RTC lost power");
-   // following line sets the RTC to the date & time this sketch was compiled
-   rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-   // This line sets the RTC with an explicit date & time, for example to set
-   // January 21, 2014 at 3am you would call:
-   // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
- }
 }
 
 
@@ -97,34 +91,46 @@ void prepareRTC() {
 
 
 
+/*
+ * LOOP funksjonen:
+ * Denne funksjonen kjøres om og om igjen. Mange ganger i millisekundet. 
+ * Dette er på en måte roten til all den andre koden. Alt kjøres ut i fra denne.
+ * 
+ * Den har følgende ansvarsoppgaver:
+ * Den henter temperaturdata og lagrer dette så ofte man stiller inn at den skal.
+ * Den sjekker om HomeTemp er tilkoblet wifi hvert 6. sekund, og kobler til Wifi dersom man ikke er det. 
+ * Den sjekker om det er noen nye enheter tilkoblet, og lytter til kommandoer fra de.
+ */
 void loop(){
+  //Henter temperatur hvert 10. minutt, og lagrer dette.
   if (millis() % refreshFreq == 1) {
     getTempAndSave();
   }
 
-  //Check if still connected to wifi
+  //Sjekker om HomeTemp fortsatt er tilkoblet wifi hvert 6. sekund
   if (millis() % 60000 == 1) {
     checkWifi();
   }
 
-  //Accept new incoming clients
+  //Godtar nye telefoner som kobles til HomeTemp, og lytter til deres kommandoer.
   checkNewClients();
 }
 
+//Henter temperatur og luftfuktighetsdata, og lagrer dette på SD kortet.
 void getTempAndSave() {
   readLiveTemp();
-  //Print and save temp and time
   String tempToSave = formatTempWithTime();
   Serial.print("Temp was updated: ");
   Serial.println(tempToSave);
   saveToSD("temps.txt", tempToSave);
 }
 
+//Henter temperatur og luftfuktighetsdata fra temperatursensor
 void readLiveTemp() {
-  //Read temperature and humidity values from DHT sensor:
-  temp = dht.readTemperature();
-  hum = dht.readHumidity();
+  temp = dht.readTemperature();     //Temperatur
+  hum = dht.readHumidity();         //Luftfuktighet
 
+  //Dersom temperatursensoren returnerer NaN (Not a Number). Altså at den feiler med å lese
   if (isnan(hum) || isnan(temp)) {
     Serial.println("Failed to read sensor");
     delay(1000);
@@ -132,6 +138,7 @@ void readLiveTemp() {
   }
 }
 
+//Lager en string med nåværende millisekunder siden 1970 og legger til temperatur og luftfuktighet med ':' som skilletegn.
 String formatTempWithTime() {
   DateTime now = rtc.now();
 
@@ -144,38 +151,38 @@ String formatTempWithTime() {
   return tempWithTime;
 }
 
+//Lagrer tekst i en fil på minnekortet
 void saveToSD(String filename, String content) {
-  // Create/Open file
+  // Lager/åpner filen som skal oppdateres
   File myFile = SD.open(filename, FILE_WRITE);
 
-  // If the file opened okay, write to it:
+  // Hvis filen er åpen, skriv til den
   if (myFile) {
     Serial.println("Writing to file...");
-    // Write to file
-    myFile.println(content);
+    myFile.println(content);  //Skriver tekst til minnekortet
     Serial.println("Done writing to file!");
   }else {
+    //Feilet med å lagre på minnekortet
     Serial.print("error saving to ");
     Serial.println(filename);
   }
   myFile.close();
 }
 
+// Leser fra minnekortet
 String readFromSD(String filename) {
-  // Reading the file
-  File myFile = SD.open(filename);
+  File myFile = SD.open(filename); //Filen som skal leses
   
   if (myFile) {
-    // Reading the whole file
-
-    String readData = "";
+    String readData = "";               //Stringen som skal holde innholdet som blir lest
     
     while (myFile.available()) {
-      readData += (char)myFile.read();
+      readData += (char)myFile.read(); //Så lenge det er mer igjen i filen å lese, så les videre.
     }
-    myFile.close();
-    return readData;
+    myFile.close();                    //Filen er ferdig lest, lukk den.
+    return readData;                   //Returner det som er lest
   }else {
+    //Klarte ikke lese fra filen
     Serial.print("error reading from ");
     Serial.println(filename);
     myFile.close();

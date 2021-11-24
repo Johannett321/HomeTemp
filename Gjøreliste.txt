@@ -1,0 +1,8 @@
+Gjøreliste:
+- Få arduinoen til å starte i konfigurasjonsmodus frem til den er konfigurert. Telefonen sender over nåværende klokkeslett, navn på nettverk, navn på enhet, og ID blir generert
+
+- Få til historikk
+
+- Få telefonen til å automatisk finne ip adressen til HomeTemp enhetene.
+
+- Legge inn API'en i appen
