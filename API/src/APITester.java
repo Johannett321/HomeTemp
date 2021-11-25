@@ -9,12 +9,26 @@ public class APITester {
 
     public static void main(String[] args) {
         HomeTempManager homeTempManager = new HomeTempManager();
-        homeTempDevice = homeTempManager.getDevice("192.168.11.172", 80);
+        homeTempDevice = homeTempManager.getDevice("172.20.10.9", 80);
         homeTempDevice.establishConnection(new ConEstablishedListener() {
             @Override
             public void connectionEstablished() {
                 System.out.println("Connection established!");
-                askForCurrentTemp();
+                doCommands();
+            }
+        });
+    }
+
+    private static void doCommands() {
+        askForCurrentTemp();
+        askForHistory();
+    }
+
+    private static void askForHistory() {
+        homeTempDevice.sendCommand("HISTORY").setAnswerReceivedListener(new AnswerReceivedListener() {
+            @Override
+            public void receivedAnswer(CommandReqAnswer commandReqAns) {
+                System.out.println("History: " + commandReqAns.getAnswer());
             }
         });
     }

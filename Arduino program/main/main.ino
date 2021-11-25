@@ -146,6 +146,12 @@ String formatTempWithTime() {
   return tempWithTime;
 }
 
+//Returnerer antall millisekunder siden 1970 fra RTC modulen.
+long getRealTimeMillis() {
+  DateTime now = rtc.now();
+  return now.unixtime();
+}
+
 //Lagrer tekst i en fil på minnekortet
 void saveToSD(String filename, String content) {
   // Lager/åpner filen som skal oppdateres
@@ -173,6 +179,39 @@ String readFromSD(String filename) {
     
     while (myFile.available()) {
       readData += (char)myFile.read(); //Så lenge det er mer igjen i filen å lese, så les videre.
+    }
+    myFile.close();                    //Filen er ferdig lest, lukk den.
+    return readData;                   //Returner det som er lest
+  }else {
+    //Klarte ikke lese fra filen
+    Serial.print("error reading from ");
+    Serial.println(filename);
+    myFile.close();
+    return "";
+  }
+}
+
+// Leser fra minnekortet, men beholder ikke alt som er lagret etter en viss dato, og før en annen.
+String readFromSDWithTimeFrame(String filename, unsigned long millisStart, unsigned long millisEnd) {
+  File myFile = SD.open(filename); //Filen som skal leses
+  
+  if (myFile) {
+    String readData = ""; //Stringen som skal holde innholdet som blir lest
+
+    String temporaryLine = ""; //En midlertidig linje med kode.
+    while (myFile.available()) {
+      char readCharacter = (char) myFile.read();
+      temporaryLine += readCharacter;
+      
+      if (readCharacter == '\n') {
+        //Ble nettop ferdig å lese en hel linje, nå: analyser den.
+        String millisOfRead = getValue(temporaryLine, ':', 0);
+        long millisOfReadLong = millisOfRead.toInt();
+        if (millisOfReadLong > millisStart && millisOfReadLong < millisEnd) {
+          readData += temporaryLine; //Dersom dataene ble lagret etter startdato, og før sluttdato, vil dataene bli beholdt.
+        }
+        temporaryLine = "";
+      }
     }
     myFile.close();                    //Filen er ferdig lest, lukk den.
     return readData;                   //Returner det som er lest

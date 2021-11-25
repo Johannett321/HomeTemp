@@ -1,7 +1,8 @@
 //WIFI INFO
-char ssid[] = "JohanH02";        // Nettverks SSID (navn)
-char pass[] = "8438936427";        // Nettverks passord
-int status = WL_IDLE_STATUS;     // Wifiens radio status
+char ssid[] = "Johans iPhone";        // Nettverks SSID (navn)
+//char pass[] = "8438936427";         // Nettverks passord hjemme
+char pass[] = "12345678";             // Nettverks passord iPhone
+int status = WL_IDLE_STATUS;          // Wifiens radio status
 
 String header = "";
 
@@ -25,7 +26,7 @@ void checkWifi() {
     Serial.println(ssid);
 
     status = WiFi.begin(ssid, pass);
-    delay(6000);
+    delay(3000);
   }
 
   delay(1); //Denne linjen sørger for at koden ikke kjøres mange ganger i millisekundet i LOOP funksjonen.
@@ -75,18 +76,30 @@ void decodeCommand() {
     client.stop();
     Serial.println("Client disconnected");
   }else if (command == "CURRENT_TEMP") {
-    /*-----Telefonen spør om nåværende temperatur-----*/
     readLiveTemp();                                       //Leser nåværende temperatur
     String answer = String(temp) + "," + String(hum);     //Slår sammen temperatur og luftfuktighet med ';'som skilletegn
     sendAnswer(commandReq, answer);                       //Sender temperatur og luftfuktighetsdataen til telefonen
   }else if (command == "DEV_ID") {
-    client.println("42909102"); //Sender device ID'en til telefonen
+    String answer = "9847488382";
+    sendAnswer(commandReq, answer); //Sender device ID'en til telefonen
+  }else if (command == "HISTORY") {
+    String answer = readFromSDWithTimeFrame("temps.txt", 1637684371, getRealTimeMillis()); //Leser alle temperaturmålingene fra SD kortet i en viss time frame, og lager et svar ut av det
+    Serial.println("----------REQUEST HISTORY------------");
+    Serial.println(answer); //Skriver de leste temperaturmålingene til konsollen.
+    Serial.println("-------------------------------------");
+    
+    char c = '\n';
+    char r = '\r';
+    answer.replace(String(c), ","); //Fjerner newline alle plasser i svaret til HomeTemp
+    answer.replace(String(r), "");  //Fjerner \r fra alle plasser i svaret til HomeTemp
+    sendAnswer(commandReq, answer); //Sender svaret til HomeTemp
   }
 }
 
 //Skriver selve svaret på forespørselen til telefonen, og sender dette over linjen
 void sendAnswer(String reqID, String answer) {
   Serial.println("Answering client...");
+  Serial.println(answer);
   client.print(reqID);
   client.print(";");
   client.println(answer);
