@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="HomeTemp API:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/HomeTemp_API_jar</output-path>
+    <root id="archive" name="HomeTemp API.jar">
+      <element id="module-output" name="HomeTemp API" />
+    </root>
+  </artifact>
+</component>

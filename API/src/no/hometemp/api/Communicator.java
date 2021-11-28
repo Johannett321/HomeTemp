@@ -41,6 +41,7 @@ class Communicator {
     }
 
     private void decodeCommand(String rawCommand) {
+        System.out.println("Raw answer: " + rawCommand);
         String[] commandSplit = rawCommand.split(";");
         String reqID = commandSplit[0];
 
@@ -52,6 +53,7 @@ class Communicator {
                     commandReqAnswer.setAnswerParams(commandSplit[2]);
                 }
 
+                System.out.println("Formatted answer: " + commandReqAnswer.getAnswer());
                 commandList.get(i).answerReceived(commandReqAnswer);
                 commandList.remove(commandList.get(i));
                 break;
@@ -71,7 +73,7 @@ class Communicator {
         lineToPrint += commandReq.getCommand();
 
         if (commandReq.getParameters() != null && !commandReq.getParameters().isEmpty()) {
-            lineToPrint += commandReq.getParameters();
+            lineToPrint += ";" + commandReq.getParameters();
         }
 
         System.out.println("Trying to send command: " + lineToPrint);

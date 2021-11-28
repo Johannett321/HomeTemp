@@ -1,12 +1,6 @@
-//WIFI INFO
-char ssid[] = "Johans iPhone";        // Nettverks SSID (navn)
-//char pass[] = "8438936427";         // Nettverks passord hjemme
-char pass[] = "12345678";             // Nettverks passord iPhone
-int status = WL_IDLE_STATUS;          // Wifiens radio status
-
-String header = "";
-
 boolean connectionSuccessLastTime = false;
+
+int failCount = 0;
 
 //Sjekker om wifi er tilkoblet, og eventuelt kobler til dersom det ikke er gjort.
 void checkWifi() {
@@ -15,17 +9,32 @@ void checkWifi() {
   while (status != WL_CONNECTED) {
     connectionSuccessLastTime = false;
     if (status == 4) {
+      failCount += 1;
       Serial.println("----------------------------------------");
       Serial.println("Failed to connect!");
+
+      if (failCount == 4) {
+        failCount = 0;
+        runFirstTimeConfig();
+      }
+      
     }else if (status == 0) {
       Serial.println("----------------------------------------");
       Serial.println("Connecting to wifi...");
     }
-    
-    Serial.print("Attempting to connect to network: ");
-    Serial.println(ssid);
 
-    status = WiFi.begin(ssid, pass);
+    char ssidCharArray[ssid.length() + 1];
+    ssid.toCharArray(ssidCharArray, ssid.length() + 1);
+
+    char passCharArray[pass.length() + 1];
+    pass.toCharArray(passCharArray, pass.length() + 1);
+
+    Serial.print("Attempting to connect to network: ");
+    Serial.print(String(ssidCharArray));
+    Serial.print(" with password: ");
+    Serial.println(String(passCharArray));
+
+    status = WiFi.begin(ssidCharArray, passCharArray);
     delay(3000);
   }
 
@@ -45,7 +54,7 @@ void checkWifi() {
 }
 
 //Sjekker om nye enheter (telefoner) prøver å koble til HomeTemp enheten.
-void checkNewClients() {
+void checkNewClients(boolean configMode) {
   client = server.available();
   
   if (client) {
@@ -56,7 +65,12 @@ void checkNewClients() {
 
       //Når telefonen sier den er ferdig å sende data, leser Arduinoen hele linjen som ble sendt.
       if (c == '\n') {
-        decodeCommand();
+        if (configMode) {
+          // HomeTemp er ikke konfigurert, og får beskjeder om å konfigureres
+          decodeConfigCommand();
+        }else {
+          decodeCommand();
+        }
         header = "";
       }else {
         header += c;
@@ -83,29 +97,52 @@ void decodeCommand() {
     String answer = "9847488382";
     sendAnswer(commandReq, answer); //Sender device ID'en til telefonen
   }else if (command == "HISTORY") {
-    String answer = readFromSDWithTimeFrame("temps.txt", 1637684371, getRealTimeMillis()); //Leser alle temperaturmålingene fra SD kortet i en viss time frame, og lager et svar ut av det
+    //Henter historikk over målinger innen en viss tidsperiode
+    String startTimeString = getValue(parameters, ',', 0);
+    String endTimeString = getValue(parameters, ',', 1);
+
+    unsigned long startTime = convertToLong(startTimeString);
+    unsigned long endTime = convertToLong(endTimeString);
+    
+    
+    String answer = readFromSDWithTimeFrame("temps.txt", startTime, endTime); //Leser alle temperaturmålingene fra SD kortet i en viss time frame, og lager et svar ut av det
     Serial.println("----------REQUEST HISTORY------------");
     Serial.println(answer); //Skriver de leste temperaturmålingene til konsollen.
     Serial.println("-------------------------------------");
-    
+
     char c = '\n';
-    char r = '\r';
-    answer.replace(String(c), ","); //Fjerner newline alle plasser i svaret til HomeTemp
-    answer.replace(String(r), "");  //Fjerner \r fra alle plasser i svaret til HomeTemp
+    answer.replace('\n', ','); //Fjerner newline alle plasser i svaret til HomeTemp
+    answer = removeLineBreaks(answer);
+    answer.trim(); //Fjerner newlines her og
+    
     sendAnswer(commandReq, answer); //Sender svaret til HomeTemp
+  }else if (command == "deviceInfo") {
+    //Sender informasjon om enhetens imei og navnet dens.
+    String answer = deviceImei;
+    answer += ",";
+    answer += deviceName;
+    sendAnswer(commandReq, answer);
+  }else if (command == "deleteConfig") {
+    //Sletter konfigurasjonsfilen med informasjon om wifi passord og enhetsnavn osv
+    SD.remove("config.txt");
+    sendAnswer(commandReq, "SUCCESS");
   }
 }
 
 //Skriver selve svaret på forespørselen til telefonen, og sender dette over linjen
 void sendAnswer(String reqID, String answer) {
   Serial.println("Answering client...");
+  delay(200);
   Serial.println(answer);
   client.print(reqID);
   client.print(";");
-  client.println(answer);
+  client.print(answer);
+  client.print(String('\r'));
+  client.print(String('\n'));
   Serial.println("Client answered!");
 }
 
+//Bruker en character til å splitte en string
 String getValue(String data, char separator, int index)
 {
   int found = 0;

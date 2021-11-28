@@ -13,9 +13,9 @@
 #include <WiFiNINA.h>
 
 /*------------------------DHT SENSOR------------------------*/
-#define DHTPIN 7        // DHT data pin connected to Arduino pin 7
-#define DHTTYPE DHT11     // DHT 22 (or AM2302)
-DHT dht = DHT(DHTPIN, DHTTYPE); // Initialize the DHT sensor
+#define DHTPIN 7        // DHT data pin
+#define DHTTYPE DHT11     // DHT 11
+DHT dht = DHT(DHTPIN, DHTTYPE); // Starter DHT sensoren
 /*----------------------------------------------------------*/
 
 /*----SD-----*/
@@ -32,20 +32,40 @@ float temp;
 int hum;
 String tempC;
 int refreshFreq = 1000*60*10; //Dersom den skal oppdateres hvert 10. minutt
+//int refreshFreq = 1000*60; //Dersom den skal oppdateres hvert minutt
 //int refreshFreq = 1000*15; //Dersom den skal oppdateres hvert 15. sekund (brukes til testing)
 
 //SERVER AND CLIENT
 WiFiServer server(80);
 WiFiClient client;
 
+//WIFI INFO
+String ssid;        // Nettverks SSID (navn)
+String pass;        // Nettverks passord
+
+boolean forceConfig = false; //Tvinger konfigurering (for eksempel dersom RTC ikke lenger vet hva klokken er).
+
 void setup() {
   Serial.begin(9600); //Dette er bare et notat til Johan: BaudRate_115200.
-  while(!Serial) {}
+  delay(2000);
+  
+  printStartupText(); //Den teksten som sier '---------------DEVICE STARTUP----------------'
 
   //Her gjøres de forskjellige modulene klare.
-  prepareRTC();
   prepareSD();
+  prepareRTC();
   prepareDHTTempSensor();
+
+  //Sjekker om enheten har blitt konfigurert før (koblet til wifi og gitt navn osv).
+  //SD.remove("config.txt"); //RESET CONFIGURATION
+  String configuration = readFromSD("config.txt");
+  if (configuration.length() < 1 || forceConfig) {
+    forceConfig = false;
+    runFirstTimeConfig(); //Kjør førstegangskonfigurasjon
+  }else {
+    configure(configuration);
+  }
+  
   checkWifi();
 }
 
@@ -60,24 +80,8 @@ void prepareRTC() {
   //Dersom RTC modulen ikke kjørte fra før (batteriet er blitt tatt ut), still klokken.
   if (! rtc.isrunning()) {
     Serial.println("RTC lost power");
-   
-    // Stiller klokken på RTC modulen til når filen ble kompilert
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    forceConfig = true;
   }
-}
-
-// Starter SD kort leseren
-void prepareSD() {
-  Serial.println("Preparing SD card...");
-  pinMode(pinSD, OUTPUT);
-  
-  if (SD.begin()) {
-    Serial.println("SD card is ready to use.");
-  }else {
-    Serial.println("SD card initialization failed");
-    abort();
-  }
-  //SD.remove("temps.txt"); //Sletter temperaturfilen dersom dette ønskes (brukes til testing)
 }
 
 // Starter temperatursensoren.
@@ -108,7 +112,7 @@ void loop(){
   }
 
   //Godtar nye telefoner som kobles til HomeTemp, og lytter til deres kommandoer.
-  checkNewClients();
+  checkNewClients(false);
 }
 
 //Henter temperatur og luftfuktighetsdata, og lagrer dette på SD kortet.
@@ -144,82 +148,4 @@ String formatTempWithTime() {
   tempWithTime += ":";
   tempWithTime += hum;
   return tempWithTime;
-}
-
-//Returnerer antall millisekunder siden 1970 fra RTC modulen.
-long getRealTimeMillis() {
-  DateTime now = rtc.now();
-  return now.unixtime();
-}
-
-//Lagrer tekst i en fil på minnekortet
-void saveToSD(String filename, String content) {
-  // Lager/åpner filen som skal oppdateres
-  File myFile = SD.open(filename, FILE_WRITE);
-
-  // Hvis filen er åpen, skriv til den
-  if (myFile) {
-    Serial.println("Writing to file...");
-    myFile.println(content);  //Skriver tekst til minnekortet
-    Serial.println("Done writing to file!");
-  }else {
-    //Feilet med å lagre på minnekortet
-    Serial.print("error saving to ");
-    Serial.println(filename);
-  }
-  myFile.close();
-}
-
-// Leser fra minnekortet
-String readFromSD(String filename) {
-  File myFile = SD.open(filename); //Filen som skal leses
-  
-  if (myFile) {
-    String readData = "";               //Stringen som skal holde innholdet som blir lest
-    
-    while (myFile.available()) {
-      readData += (char)myFile.read(); //Så lenge det er mer igjen i filen å lese, så les videre.
-    }
-    myFile.close();                    //Filen er ferdig lest, lukk den.
-    return readData;                   //Returner det som er lest
-  }else {
-    //Klarte ikke lese fra filen
-    Serial.print("error reading from ");
-    Serial.println(filename);
-    myFile.close();
-    return "";
-  }
-}
-
-// Leser fra minnekortet, men beholder ikke alt som er lagret etter en viss dato, og før en annen.
-String readFromSDWithTimeFrame(String filename, unsigned long millisStart, unsigned long millisEnd) {
-  File myFile = SD.open(filename); //Filen som skal leses
-  
-  if (myFile) {
-    String readData = ""; //Stringen som skal holde innholdet som blir lest
-
-    String temporaryLine = ""; //En midlertidig linje med kode.
-    while (myFile.available()) {
-      char readCharacter = (char) myFile.read();
-      temporaryLine += readCharacter;
-      
-      if (readCharacter == '\n') {
-        //Ble nettop ferdig å lese en hel linje, nå: analyser den.
-        String millisOfRead = getValue(temporaryLine, ':', 0);
-        long millisOfReadLong = millisOfRead.toInt();
-        if (millisOfReadLong > millisStart && millisOfReadLong < millisEnd) {
-          readData += temporaryLine; //Dersom dataene ble lagret etter startdato, og før sluttdato, vil dataene bli beholdt.
-        }
-        temporaryLine = "";
-      }
-    }
-    myFile.close();                    //Filen er ferdig lest, lukk den.
-    return readData;                   //Returner det som er lest
-  }else {
-    //Klarte ikke lese fra filen
-    Serial.print("error reading from ");
-    Serial.println(filename);
-    myFile.close();
-    return "";
-  }
 }

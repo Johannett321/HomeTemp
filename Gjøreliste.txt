@@ -1,8 +1,28 @@
 Gjøreliste:
-- Få arduinoen til å starte i konfigurasjonsmodus frem til den er konfigurert. Telefonen sender over nåværende klokkeslett, navn på nettverk, navn på enhet, og ID blir generert
+- Legge til en innstillinger skjerm per enhet
 
-- Få til historikk
+	- Legge til funksjon for å endre navn på enhet
 
-- Få telefonen til å automatisk finne ip adressen til HomeTemp enhetene.
+	- Legge til funksjon for å oppdatere ikonet til de forskjellige enhetene.
+	
+	-Legge til funksjon for å endre hvor ofte enheten målet
 
-- Legge inn API'en i appen
+- Legge til mock funksjon for statistikk over hele huset?
+
+- Legge til historikk for humidity?
+
+- Legge til en launcher skjerm
+
+- Designe konfigureringssiden
+
+- Legge til appikon
+
+- Bytte navn på app
+
+- Lage en metode som sletter alle målinger som er en viss tid gamle.
+
+- Få "hent på nytt" knappen i appen til å fungere. Ligger under "roominfo"
+
+* Fikse bug som gjør at man ikke kan koble til Arduino uten å restarte den når den nettop er konfigurert. 
+
+* Fikse sånn at hovedskjermen oppdaterer seg dersom RoomInfo henter ny temperatur eller luftfuktighet.
