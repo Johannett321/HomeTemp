@@ -23,6 +23,8 @@ Gjøreliste:
 
 - Få "hent på nytt" knappen i appen til å fungere. Ligger under "roominfo"
 
+- Lage readme's og lesestoff til de andre
+
 * Fikse bug som gjør at man ikke kan koble til Arduino uten å restarte den når den nettop er konfigurert. 
 
 * Fikse sånn at hovedskjermen oppdaterer seg dersom RoomInfo henter ny temperatur eller luftfuktighet.
