@@ -37,8 +37,8 @@ public class SearchingForHomeTemp extends Activity {
         setContentView(R.layout.searching_for_hometemp);
         findViews();
 
-        ssidField.setText("JohanH02");
-        passwordField.setText("8438936427");
+        ssidField.setText("Johans iPhone");
+        passwordField.setText("12345678");
         nameField.setText("Stue");
 
         startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));

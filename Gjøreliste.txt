@@ -1,17 +1,5 @@
 Gjøreliste:
-- Legge til en innstillinger skjerm per enhet
-
-	- Legge til funksjon for å endre navn på enhet
-
-	- Legge til funksjon for å oppdatere ikonet til de forskjellige enhetene.
-	
-	-Legge til funksjon for å endre hvor ofte enheten målet
-
-- Legge til mock funksjon for statistikk over hele huset?
-
 - Legge til historikk for humidity?
-
-- Legge til en launcher skjerm
 
 - Designe konfigureringssiden
 
@@ -24,6 +12,8 @@ Gjøreliste:
 - Få "hent på nytt" knappen i appen til å fungere. Ligger under "roominfo"
 
 - Lage readme's og lesestoff til de andre
+
+- Legge til swipe down to refresh på "mitt hjem" siden?
 
 * Fikse bug som gjør at man ikke kan koble til Arduino uten å restarte den når den nettop er konfigurert. 
 

@@ -27,7 +27,7 @@ RTC_DS1307 rtc;
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 /*-----------*/
 
-//Variables
+//Variabler
 float temp;
 int hum;
 String tempC;
@@ -78,7 +78,7 @@ void prepareRTC() {
   }
 
   //Dersom RTC modulen ikke kjørte fra før (batteriet er blitt tatt ut), still klokken.
-  if (! rtc.isrunning()) {
+  if (!rtc.isrunning()) {
     Serial.println("RTC lost power");
     forceConfig = true;
   }
@@ -106,7 +106,7 @@ void loop(){
     getTempAndSave();
   }
 
-  //Sjekker om HomeTemp fortsatt er tilkoblet wifi hvert 6. sekund
+  //Sjekker om HomeTemp fortsatt er tilkoblet wifi hvert 60. sekund
   if (millis() % 60000 == 1) {
     checkWifi();
   }
@@ -126,6 +126,7 @@ void getTempAndSave() {
 
 //Henter temperatur og luftfuktighetsdata fra temperatursensor
 void readLiveTemp() {
+  a:
   temp = dht.readTemperature();     //Temperatur
   hum = dht.readHumidity();         //Luftfuktighet
 
@@ -133,7 +134,7 @@ void readLiveTemp() {
   if (isnan(hum) || isnan(temp)) {
     Serial.println("Failed to read sensor");
     delay(1000);
-    return;
+    goto a;
   }
 }
 

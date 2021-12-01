@@ -19,8 +19,6 @@ import no.hometemp.api.HomeTempManager;
 
 public class LoadingActivity extends Activity {
 
-    TextView statusText;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,7 +28,7 @@ public class LoadingActivity extends Activity {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

@@ -15,10 +15,11 @@
         android:background="@drawable/small_white_card_background">
 
         <ImageView
-            android:id="@+id/roomImage"
+            android:id="@+id/roomIcon"
             android:layout_width="match_parent"
             android:layout_height="80dp"
             android:layout_weight="1"
+            android:padding="5dp"
             android:src="@drawable/double_bed"/>
 
         <TextView

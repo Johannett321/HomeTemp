@@ -24,6 +24,7 @@
         <activity android:name=".pages.MainScreen"/>
         <activity android:name=".pages.RoomInfo"/>
         <activity android:name=".pages.configuration.SearchingForHomeTemp"/>
+        <activity android:name=".pages.RoomSettings"/>
     </application>
 
 </manifest>

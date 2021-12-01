@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -167,9 +168,10 @@ public class MainScreen extends Activity {
             View cellView = LayoutInflater.from(MainScreen.this).inflate(R.layout.room_grid_cell, viewGroup, false);
             TextView roomTitle = cellView.findViewById(R.id.roomTitle);
             final TextView roomTemp = cellView.findViewById(R.id.roomTemp);
+            ImageView roomIcon = cellView.findViewById(R.id.roomIcon);
 
             roomTitle.setText(RoomManager.getListOfRooms().get(i).getDeviceName());
-
+            roomIcon.setImageDrawable(IconManager.getIconFromName(MainScreen.this, RoomManager.getListOfRooms().get(i).getDeviceName()));
 
             roomTemp.setText("...");
             Thread thread = new Thread(new Runnable() {

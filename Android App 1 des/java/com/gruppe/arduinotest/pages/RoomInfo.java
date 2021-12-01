@@ -1,8 +1,14 @@
 package com.gruppe.arduinotest.pages;
 
+import android.animation.Animator;
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -32,6 +38,10 @@ public class RoomInfo extends Activity {
     TextView roomTempLarge;
     TextView smallCardTempText;
     TextView smallCardHumidText;
+    ImageView roomIcon;
+
+    TextView reloadButtonText;
+    ProgressBar progressBar;
 
     LineChart lineChart;
 
@@ -41,6 +51,12 @@ public class RoomInfo extends Activity {
         setContentView(R.layout.activity_room_info);
 
         homeTempDevice = RoomManager.getRoom(getIntent().getStringExtra("roomID"));
+        homeTempDevice.getTempData(new TempDataReceivedListener() {
+            @Override
+            public void onDataReceived(float temperatur, float humidity) {
+
+            }
+        });
 
         findViews();
         fillOutData();
@@ -52,13 +68,23 @@ public class RoomInfo extends Activity {
         roomTempLarge = findViewById(R.id.roomTempLarge);
         smallCardTempText = findViewById(R.id.smallCardTempText);
         smallCardHumidText = findViewById(R.id.smallCardHumidText);
+        roomIcon = findViewById(R.id.roomIcon);
+
+        reloadButtonText = findViewById(R.id.reloadButtonText);
+
+        progressBar = findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.GONE);
 
         lineChart = findViewById(R.id.lineChart);
     }
 
     private void fillOutData() {
+        progressBar.setVisibility(View.VISIBLE);
+        reloadButtonText.setVisibility(View.GONE);
+
         roomName.setText(homeTempDevice.getDeviceName());
         roomNameLongCard.setText(homeTempDevice.getDeviceName());
+        roomIcon.setImageDrawable(IconManager.getIconFromName(this, homeTempDevice.getDeviceName()));
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -68,9 +94,12 @@ public class RoomInfo extends Activity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                reloadButtonText.setVisibility(View.VISIBLE);
+                                progressBar.setVisibility(View.GONE);
+
                                 roomTempLarge.setText(temperature + "°");
                                 smallCardTempText.setText(temperature + "°");
-                                smallCardHumidText.setText(String.valueOf(humidity));
+                                smallCardHumidText.setText(String.valueOf(humidity) + "%");
                             }
                         });
                     }
@@ -143,5 +172,28 @@ public class RoomInfo extends Activity {
             }
         });
         thread.start();
+    }
+
+    public void roomSettingsPressed(View view) {
+        Intent intent = new Intent(this, RoomSettings.class);
+        Log.e("INTENT", "Adding " + homeTempDevice.getDeviceID() + " to intent.");
+        intent.putExtra("roomID", homeTempDevice.getDeviceID());
+        startActivity(intent);
+    }
+
+    public void refreshRoom(final View view) {
+        view.animate().scaleX((float) 1.1).scaleY((float) 1.1).setDuration(100).setListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {}
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                view.animate().scaleX((float) 1).scaleY((float) 1).setDuration(100).setListener(null).start();
+            }
+            @Override
+            public void onAnimationCancel(Animator animation) {}
+            @Override
+            public void onAnimationRepeat(Animator animation) {}
+        }).start();
+        fillOutData();
     }
 }

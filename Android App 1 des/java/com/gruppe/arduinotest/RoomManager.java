@@ -44,9 +44,10 @@ public class RoomManager {
                         MainScreen.progressBar.setVisibility(View.GONE);
                     }
                 });
-                /*
 
-                final HomeTempDevice homeTempDevice = HomeTempManager.getDevice("192.168.11.172", 80);
+
+                /*
+                final HomeTempDevice homeTempDevice = HomeTempManager.getDevice("172.20.10.9", 80);
                 homeTempDevice.establishConnection(new ConEstablishedListener() {
                     @Override
                     public void connectionEstablished() {
@@ -54,7 +55,6 @@ public class RoomManager {
                         conEstablishedListener.connectionEstablished();
                     }
                 });
-
                  */
             }
         });

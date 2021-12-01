@@ -67,6 +67,9 @@ void decodeConfigCommand() {
     parameters.replace(String(r), "");  //Fjerner \r fra alle plasser i svaret til HomeTemp
     SD.remove("config.txt");
     saveToSD("config.txt", parameters);
+    
+    SD.remove("freq.txt");
+    saveToSD("freq.txt", "600000");
 
     //Reset nettverksstatus
     status = WL_IDLE_STATUS;
@@ -82,6 +85,9 @@ void decodeConfigCommand() {
 
 //Konfigurerer HomeTemp etter siste informasjon fra mobil
 void configure(String configuration) {
+  String refreshFreqString = readFromSD("freq.txt");
+  refreshFreq = refreshFreqString.toInt();
+  Serial.println("Refresh freq is set to: " + refreshFreqString);
   ssid = getValue(configuration, ',', 0);         //SSID
   pass = getValue(configuration, ',', 1);         //PASS
   deviceName = getValue(configuration, ',', 2);   //Enhetens navn

@@ -7,6 +7,7 @@ public class APITester {
 
     public static void main(String[] args) {
         homeTempManager = new HomeTempManager();
+
         boolean config = false;
 
         if (config) {

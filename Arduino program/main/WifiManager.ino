@@ -126,6 +126,11 @@ void decodeCommand() {
     //Sletter konfigurasjonsfilen med informasjon om wifi passord og enhetsnavn osv
     SD.remove("config.txt");
     sendAnswer(commandReq, "SUCCESS");
+  }else if (command == "setRefreshFreq") {
+    SD.remove("freq.txt");
+    saveToSD("freq.txt", parameters);
+    refreshFreq = parameters.toInt();
+    sendAnswer(commandReq, "SUCCESS");
   }
 }
 

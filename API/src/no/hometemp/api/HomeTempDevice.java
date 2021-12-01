@@ -36,14 +36,6 @@ public class HomeTempDevice {
         return deviceName;
     }
 
-    public void setDeviceName(String deviceName) {
-        this.deviceName = deviceName;
-    }
-
-    public String getDeviceID() {
-        return deviceID;
-    }
-
     public boolean isConnected() {
         return socket.isConnected() && deviceReady;
     }
@@ -64,8 +56,9 @@ public class HomeTempDevice {
                             if (!commandReqAns.getAnswer().equals("null")) {
                                 deviceID = commandReqAns.getAnswer().split(",")[0];
                                 deviceName = commandReqAns.getAnswer().split(",")[1];
+
+                                conEstablishedListener.connectionEstablished();
                             }
-                            conEstablishedListener.connectionEstablished();
                         }
                     });
                 } catch (IOException e) {
@@ -89,7 +82,7 @@ public class HomeTempDevice {
     }
 
     protected void sendConfigInfo(String ssid, String pass, String deviceID, String deviceName, AnswerReceivedListener answerReceivedListener) {
-        sendCommand("configure;", ssid + "," + pass + "," + deviceName + "," + deviceID + "," + String.valueOf(System.currentTimeMillis()/1000)).setAnswerReceivedListener(answerReceivedListener);
+        sendCommand("configure", ssid + "," + pass + "," + deviceName + "," + deviceID + "," + String.valueOf(System.currentTimeMillis()/1000)).setAnswerReceivedListener(answerReceivedListener);
     }
 
     /*-----------------------------COMMANDS-----------------------------*/
@@ -132,5 +125,13 @@ public class HomeTempDevice {
                 historicalTempDataReceivedListener.onReceive(historicalTempDataList);
             }
         });
+    }
+
+    public void setRefreshFreq(int minutes, AnswerReceivedListener answerReceivedListener) {
+        sendCommand("setRefreshFreq", String.valueOf(minutes*60*1000)).setAnswerReceivedListener(answerReceivedListener);
+    }
+
+    public String getDeviceID() {
+        return deviceID;
     }
 }

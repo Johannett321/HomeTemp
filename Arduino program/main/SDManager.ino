@@ -1,20 +1,19 @@
 // Starter SD kort leseren
 void prepareSD() {
   Serial.println("Preparing SD card...");
-  pinMode(pinSD, OUTPUT);
   
-  if (SD.begin()) {
+  if (SD.begin(pinSD)) {
     Serial.println("SD card is ready to use.");
   }else {
     Serial.println("SD card initialization failed");
     abort();
   }
-  //SD.remove("temps.txt"); //Sletter temperaturfilen dersom dette ønskes (brukes til testing)
 }
 
 //Lagrer tekst i en fil på minnekortet
 void saveToSD(String filename, String content) {
   // Lager/åpner filen som skal oppdateres
+  Serial.println("Opening file (WRITE): " + filename);
   File myFile = SD.open(filename, FILE_WRITE);
 
   // Hvis filen er åpen, skriv til den
@@ -24,7 +23,7 @@ void saveToSD(String filename, String content) {
     Serial.println("Done writing to file!");
   }else {
     //Feilet med å lagre på minnekortet
-    Serial.print("error saving to ");
+    Serial.print("ERROR saving to ");
     Serial.println(filename);
   }
   myFile.close();
@@ -32,9 +31,11 @@ void saveToSD(String filename, String content) {
 
 // Leser fra minnekortet
 String readFromSD(String filename) {
-  File myFile = SD.open(filename); //Filen som skal leses
+  Serial.println("Opening file (READ): " + filename);
+  File myFile = SD.open(filename, FILE_READ); //Filen som skal leses
   
   if (myFile) {
+    Serial.println("Starting read...");
     String readData = "";               //Stringen som skal holde innholdet som blir lest
     
     while (myFile.available()) {
@@ -44,7 +45,7 @@ String readFromSD(String filename) {
     return readData;                   //Returner det som er lest
   }else {
     //Klarte ikke lese fra filen
-    Serial.print("error reading from ");
+    Serial.print("ERROR reading from ");
     Serial.println(filename);
     myFile.close();
     return "";
@@ -53,9 +54,12 @@ String readFromSD(String filename) {
 
 // Leser fra minnekortet, men beholder ikke alt som er lagret etter en viss dato, og før en annen.
 String readFromSDWithTimeFrame(String filename, unsigned long millisStart, unsigned long millisEnd) {
-  File myFile = SD.open(filename); //Filen som skal leses
+  Serial.println("Reading from SD with time frame: " + filename);
+  
+  File myFile = SD.open(filename, FILE_READ); //Filen som skal leses
   
   if (myFile) {
+    Serial.println("Starting read...");
     String readData = ""; //Stringen som skal holde innholdet som blir lest
 
     String temporaryLine = ""; //Hver linje som blir lest fra filen, blir midlertidig lagret i denne
@@ -73,13 +77,40 @@ String readFromSDWithTimeFrame(String filename, unsigned long millisStart, unsig
         temporaryLine = "";
       }
     }
+    Serial.println("Done reading...");
     myFile.close();                    //Filen er ferdig lest, lukk den.
     return readData;                   //Returner det som er lest
   }else {
     //Klarte ikke lese fra filen
-    Serial.print("error reading from ");
+    Serial.print("ERROR reading from ");
     Serial.println(filename);
     myFile.close();
     return "";
   }
+}
+
+void createFile(String filename) {
+  Serial.print("Creating file with name: ");
+  Serial.println("/hometemp/" + filename);
+
+  if(SD.exists("/hometemp")==0) {
+    Serial.println("Creating folder 'Hometemp'");
+    SD.mkdir("/hometemp");
+  }
+  
+  File myFile = SD.open("/hometemp/" + filename, FILE_WRITE);
+
+  if(SD.exists("/hometemp/" + filename)==0) {
+    if (myFile) {
+      Serial.println("File created!");
+    }else {
+      Serial.println("ERROR: Unable to create file: " + filename);
+    }
+    myFile.close();
+  }
+
+  if (myFile) {
+    Serial.println("File created!");
+  }
+  
 }

@@ -12,15 +12,16 @@
             android:layout_height="wrap_content"
             android:paddingBottom="75dp"
             android:orientation="vertical">
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:layout_marginVertical="10dp"
-                android:gravity="center_vertical">
+                android:layout_marginVertical="10dp">
 
                 <ImageView
+                    android:id="@+id/backButton"
                     android:layout_width="25dp"
                     android:layout_height="25dp"
+                    android:layout_centerVertical="true"
                     android:src="@drawable/arrow"
                     android:layout_marginLeft="20dp"
                     android:alpha="0.7"/>
@@ -30,12 +31,22 @@
                     android:id="@+id/roomName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@id/backButton"
                     android:layout_marginLeft="10dp"
                     android:textStyle="bold"
                     android:textSize="25sp"
                     android:textColor="@android:color/black"
                     android:text="Soverom"/>
-            </LinearLayout>
+
+                <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_alignParentRight="true"
+                    android:background="@android:color/darker_gray"
+                    android:onClick="roomSettingsPressed"/>
+            </RelativeLayout>
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -64,12 +75,15 @@
                         android:layout_weight="1">
 
                         <ImageView
+                            android:id="@+id/roomIcon"
                             android:layout_width="50dp"
                             android:layout_height="50dp"
-                            android:layout_centerHorizontal="true"
-                            android:layout_centerVertical="true"
-                            android:layout_margin="10dp"
-                            android:src="@drawable/home"/>
+                            android:layout_centerInParent="true"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginEnd="10dp"
+                            android:layout_marginBottom="10dp"
+                            android:src="@drawable/home" />
 
                     </RelativeLayout>
 
@@ -214,16 +228,24 @@
         android:layout_marginLeft="50dp"
         android:layout_marginRight="50dp"
         android:layout_marginBottom="20dp"
-        android:gravity="center"
         android:background="@drawable/big_purple_button"
-        android:elevation="5dp">
+        android:elevation="5dp"
+        android:onClick="refreshRoom">
 
         <TextView
+            android:id="@+id/reloadButtonText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@android:color/white"
+            android:layout_centerInParent="true"
             android:text="Hent på nytt"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_centerInParent="true" />
     </RelativeLayout>
 </RelativeLayout>
